@@ -650,6 +650,94 @@
       border-color: #334155;
       color: #e7e7eb;
     }
+
+    /* MQTT Settings Styles */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+      margin-right: 10px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+    }
+
+    input:checked + .slider {
+      background-color: #2563eb;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
+    #mqttSettings .form-group {
+      margin-bottom: 15px;
+    }
+
+    #mqttSettings input[type="text"],
+    #mqttSettings input[type="password"],
+    #mqttSettings input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    #mqttSettings label {
+      display: block;
+      margin-bottom: 5px;
+      color: #374151;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* Dark mode support */
+    body.dark-mode #mqttSettings input[type="text"],
+    body.dark-mode #mqttSettings input[type="password"],
+    body.dark-mode #mqttSettings input[type="number"] {
+      background: #1e1e2d;
+      border-color: #334155;
+      color: #e5e7eb;
+    }
+
+    body.dark-mode #mqttSettings label {
+      color: #e5e7eb;
+    }
   </style>
 </head>
 <body>
@@ -730,6 +818,42 @@
           <button class="control-btn btn-danger" onclick="resetDevice()">
             Reset Device
           </button>
+        </div>
+      </div>
+    </div>
+    <!-- MQTT Settings Card -->
+    <div class="bento-card">
+      <div class="bento-title"><i class="fas fa-broadcast-tower"></i> MQTT Settings</div>
+      <div class="bento-content">
+        <div class="form-group">
+          <label class="switch">
+            <input type="checkbox" id="mqttEnabled" onchange="updateMQTTSettings()">
+            <span class="slider round"></span>
+          </label>
+          <span>Enable MQTT</span>
+        </div>
+        <div id="mqttSettings" style="display: none;">
+          <div class="form-group">
+            <label>Server:</label>
+            <input type="text" id="mqttServer" placeholder="broker.example.com">
+          </div>
+          <div class="form-group">
+            <label>Port:</label>
+            <input type="number" id="mqttPort" value="1883">
+          </div>
+          <div class="form-group">
+            <label>Username:</label>
+            <input type="text" id="mqttUsername">
+          </div>
+          <div class="form-group">
+            <label>Password:</label>
+            <input type="password" id="mqttPassword">
+          </div>
+          <div class="form-group">
+            <label>Topic Prefix:</label>
+            <input type="text" id="mqttTopicPrefix" value="esp8266_relay/">
+          </div>
+          <button class="control-btn" onclick="saveMQTTSettings()">Save MQTT Settings</button>
         </div>
       </div>
     </div>
@@ -857,12 +981,12 @@ function createRelayControlCard(index, data) {
   const name = data.name || `Relay ${index + 1}`;
   const description = data.description || '';
   const scheduled = data.scheduled || false;
-  const scheduleCount = data.numSchedules || 0;
-  
-  return `
+  const scheduleCount = data.numSchedules || 0;    return `
     <div class="relay-row-card">
       <div class="relay-info">
-        <span class="relay-row-label">${name}</span>
+        <span class="relay-row-label" onclick="editRelayName(${index})" title="Click to edit name" style="cursor: pointer;">
+          ${name} <i class="fas fa-edit" style="font-size: 0.8em; margin-left: 4px;"></i>
+        </span>
         ${description ? `<span class="relay-description">${description}</span>` : ''}
       </div>
       <div class="relay-status">
@@ -870,7 +994,7 @@ function createRelayControlCard(index, data) {
         ${scheduled ? `<span class="schedule-badge" title="${scheduleCount} schedule(s) active"><i class="fas fa-clock"></i>${scheduleCount}</span>` : ''}
       </div>
       <div class="relay-actions">
-        <button class="schedule-btn" onclick="showScheduleDialog(${index})">
+        <button class="schedule-btn" onclick="showScheduleDialog(${index})" title="Schedule">
           <i class="fas fa-calendar-alt"></i>
         </button>
         <span class="toggle-switch${state ? ' active' : ''}" onclick="toggleRelay(${index})" title="Toggle Relay"></span>
@@ -996,6 +1120,60 @@ function setupWebSocket() {
   websocket.onerror = function(error) {
     updateConnectionStatus(false);
   };
+}
+
+// MQTT Settings Management
+function updateMQTTSettings() {
+  const enabled = document.getElementById('mqttEnabled').checked;
+  document.getElementById('mqttSettings').style.display = enabled ? 'block' : 'none';
+}
+
+function loadMQTTSettings(data) {
+  if (data.mqtt) {
+    document.getElementById('mqttEnabled').checked = data.mqtt.enabled;
+    document.getElementById('mqttServer').value = data.mqtt.server || '';
+    document.getElementById('mqttPort').value = data.mqtt.port || 1883;
+    document.getElementById('mqttUsername').value = data.mqtt.username || '';
+    document.getElementById('mqttPassword').value = data.mqtt.password || '';
+    document.getElementById('mqttTopicPrefix').value = data.mqtt.topic_prefix || 'esp8266_relay/';
+    updateMQTTSettings();
+  }
+}
+
+function saveMQTTSettings() {
+  const settings = {
+    cmd: 'mqtt_config',
+    config: {
+      enabled: document.getElementById('mqttEnabled').checked,
+      server: document.getElementById('mqttServer').value,
+      port: parseInt(document.getElementById('mqttPort').value),
+      username: document.getElementById('mqttUsername').value,
+      password: document.getElementById('mqttPassword').value,
+      topic_prefix: document.getElementById('mqttTopicPrefix').value
+    }
+  };
+
+  if (websocket && websocket.readyState === WebSocket.OPEN) {
+    websocket.send(JSON.stringify(settings));
+  }
+}
+
+// Relay Name Editing
+function editRelayName(index) {
+  const currentName = deviceData.relays[index].name || `Relay ${index + 1}`;
+  const newName = prompt('Enter new name for ' + currentName + ':', currentName);
+  
+  if (newName !== null && newName !== currentName) {
+    const command = {
+      cmd: 'rename_relay',
+      relay: index,
+      name: newName
+    };
+    
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      websocket.send(JSON.stringify(command));
+    }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

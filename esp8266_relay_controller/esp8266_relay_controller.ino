@@ -628,16 +628,49 @@ void setup() {
             setRelay(idx, state);
             notifyClients();
           }
-          else if (cmd == "status") {
-            StaticJsonDocument<512> statusDoc;
-            statusDoc["mqtt_connected"] = mqttConfig.enabled && mqtt.connected();
-            statusDoc["wifi_rssi"] = WiFi.RSSI();
-            statusDoc["free_heap"] = ESP.getFreeHeap();
-            statusDoc["uptime"] = millis();
+          else if (cmd == "mqtt_config") {
+            if (!doc.containsKey("config")) {
+              client->text("{\"error\":\"Missing config parameter\"}");
+              return;
+            }
             
-            String statusMsg;
-            serializeJson(statusDoc, statusMsg);
-            client->text(statusMsg);
+            JsonObject config = doc["config"];
+            mqttConfig.enabled = config["enabled"] | false;
+            mqttConfig.server = config["server"] | "";
+            mqttConfig.port = config["port"] | 1883;
+            mqttConfig.username = config["username"] | "";
+            mqttConfig.password = config["password"] | "";
+            mqttConfig.topic_prefix = config["topic_prefix"] | "esp8266_relay/";
+            
+            if (mqttConfig.enabled) {
+              setupMQTT();
+            }
+            
+            saveConfig();
+            notifyClients();
+          }
+          else if (cmd == "rename_relay") {
+            if (!doc.containsKey("relay") || !doc.containsKey("name")) {
+              client->text("{\"error\":\"Missing relay or name parameter\"}");
+              return;
+            }
+            
+            int idx = doc["relay"].as<int>();
+            String newName = doc["name"].as<String>();
+            
+            if (idx < 0 || idx >= NUM_RELAYS) {
+              client->text("{\"error\":\"Invalid relay index\"}");
+              return;
+            }
+            
+            relayConfigs[idx].name = newName;
+            saveConfig();
+            notifyClients();
+            
+            // Update MQTT if enabled
+            if (mqttConfig.enabled && mqtt.connected()) {
+              publishRelayState(idx);
+            }
           }
           else {
             client->text("{\"error\":\"Unknown command\"}");
