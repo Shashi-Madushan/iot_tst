@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ESP8266 Smart Relay Controller</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* Reset and base styles */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6fa;
+      color: #222;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0.75rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .nav-content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-size: 2rem;
+      font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #2563eb;
+      text-shadow: 0 2px 8px rgba(37,99,235,0.08);
+    }
+    .logo .portal {
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      font-weight: 400;
+      font-size: 1.1rem;
+      margin-left: 0.4em;
+      letter-spacing: 0.01em;
+      color: #374151;
+      text-shadow: none;
+    }
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.97rem;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      transition: background 0.2s;
+    }
+    .status-connected {
+      background: #e6f9ed;
+      color: #1a7f37;
+      border-color: #b7e4c7;
+    }
+    .status-disconnected {
+      background: #fbeaea;
+      color: #b91c1c;
+      border-color: #fca5a5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    /* Bento grid layout */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+      align-items: stretch;
+    }
+    .bento-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      border: 1px solid #e5e7eb;
+      padding: 1.8rem 1.5rem 1.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeInUp 0.7s forwards;
+      height: 100%;
+    }
+    .bento-card:nth-child(1) { animation-delay: 0.05s; }
+    .bento-card:nth-child(2) { animation-delay: 0.15s; }
+    .bento-card:nth-child(3) { animation-delay: 0.25s; }
+    .bento-card:nth-child(4) { animation-delay: 0.35s; }
+    .bento-card:hover {
+      box-shadow: 0 6px 24px rgba(37,99,235,0.10);
+      transform: translateY(-4px) scale(1.02);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .bento-title {
+      font-size: 1.08rem;
+      font-weight: 600;
+      color: #2563eb;
+      margin-bottom: 0.7rem;
+      letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+    }
+    .bento-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      justify-content: center;
+      padding: 0.5rem 0;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+      margin-bottom: 0.2em;
+    }
+    .info-label {
+      color: #6b7280;
+      font-size: 0.97em;
+    }
+    .info-value {
+      font-weight: 500;
+      color: #222;
+      font-size: 1.05em;
+    }
+    .signal-strength {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      justify-content: flex-end;
+    }
+    .signal-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d1d5db;
+      display: inline-block;
+    }
+    .signal-dot.active {
+      background: #1a7f37;
+    }
+    .relay-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 0.5rem; /* Add vertical spacing between rows */
+      margin-top: 0.5rem;
+    }
+    .relay-table th, .relay-table td {
+      padding: 0.5rem 0.3rem;
+      text-align: center;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.97rem;
+      background: #fff;
+    }
+    .relay-table th {
+      background: #f3f4f6;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .relay-table tr {
+      transition: box-shadow 0.2s;
+    }
+    .relay-table tr:not(:first-child):hover {
+      box-shadow: 0 2px 8px rgba(37,99,235,0.07);
+      background: #f8fafc;
+    }
+    /* Two-column relay controls grid */
+    .relay-controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.2rem;
+      width: 100%;
+      padding: 0.5rem 0;
+    }
+    .relay-controls-grid .relay-row-card {
+      background: #f7fafc;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    /* Toggle switch styles */
+    .toggle-switch {
+      width: 44px;
+      height: 24px;
+      background: #d1d5db;
+      border-radius: 12px;
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      transition: background 0.2s;
+      vertical-align: middle;
+      margin-left: 1em;
+    }
+    .toggle-switch::before {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: left 0.2s;
+    }
+    .toggle-switch.active {
+      background: #2563eb;
+    }
+    .toggle-switch.active::before {
+      left: 23px;
+      background: #fff;
+    }
+    /* Relay ON/OFF status text color */
+    .relay-status-on {
+      color: #1a7f37;
+      font-weight: bold;
+    }
+    .relay-status-off {
+      color: #b91c1c;
+      font-weight: bold;
+    }
+    .controls-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin: 0;
+      align-items: stretch;
+      width: 100%;
+      padding: 0.5rem 0;
+    }
+    .control-btn {
+      padding: 0.65rem 1.3rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.08rem;
+      font-weight: 600;
+      background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+      color: #fff;
+      transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.10);
+      outline: none;
+      margin-bottom: 0;
+      display: block;
+      width: 100%;
+      letter-spacing: 0.01em;
+    }
+    .control-btn:active, .control-btn:hover {
+      background: linear-gradient(90deg, #1d4ed8 60%, #2563eb 100%);
+      box-shadow: 0 4px 16px rgba(37,99,235,0.13);
+      transform: translateY(-2px) scale(1.01);
+    }
+    .btn-danger {
+      background: linear-gradient(90deg, #b91c1c 60%, #ef4444 100%);
+      color: #fff;
+    }
+    .btn-danger:active, .btn-danger:hover {
+      background: linear-gradient(90deg, #991b1b 60%, #b91c1c 100%);
+      box-shadow: 0 4px 16px rgba(185,28,28,0.13);
+    }
+    @media (max-width: 1200px) {
+      .bento-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+    }
+    @media (max-width: 900px) {
+      /* Responsive Layout Improvements */
+      .container { 
+        padding: 0.8rem;
+        margin: 1rem auto;
+        max-width: 100%;
+      }
+      .nav-content {
+        padding: 0 1rem;
+      }
+      .bento-grid { 
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .relay-controls-row { 
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .relay-controls-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+      }
+      .relay-row-card {
+        padding: 1rem 0.8rem;
+      }
+      .controls-section {
+        gap: 0.6rem;
+      }
+      .control-btn {
+        padding: 0.9rem 0.8rem;
+      }
+    }
+    /* Remove these overrides since we're handling them above */
+    @media (max-width: 700px) {
+      .bento-grid { grid-template-columns: 1fr; }
+      .relay-controls-row { grid-template-columns: 1fr; gap: 1.2rem; }
+      .relay-controls-grid { grid-template-columns: 1fr; gap: 1rem; }
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 0.5rem;
+      }
+      .nav-content {
+        padding: 0 0.8rem;
+      }
+      .logo {
+        font-size: 1.5rem;
+      }
+      .logo .portal {
+        font-size: 0.9rem;
+      }
+      .connection-status {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.9rem;
+      }
+      #themeToggleBtn {
+        font-size: 1.2em;
+        margin-right: 0.5em;
+      }
+      .relay-row-card {
+        padding: 1rem 0.8rem;
+      }
+      .controls-section {
+        gap: 0.6rem;
+      }
+      .control-btn {
+        padding: 0.9rem 0.8rem;
+      }
+    }
+    /* New: relay-controls-row for relay+buttons in same row */
+    .relay-controls-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      align-items: start;
+      width: 100%;
+    }
+    .controls-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      border: 1px solid #e5e7eb;
+      padding: 1.8rem 1.5rem 1.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeInUp 0.7s forwards;
+      animation-delay: 0.45s;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 0;
+      height: 100%;
+      /* Card effect matches .bento-card */
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .controls-card:hover {
+      box-shadow: 0 6px 24px rgba(37,99,235,0.10);
+      transform: translateY(-4px) scale(1.02);
+    }
+    /* Dark mode styles */
+    body.dark-mode {
+      background: #181a20;
+      color: #e5e7eb;
+    }
+    body.dark-mode .navbar {
+      background: #23262f;
+      border-bottom: 1px solid #23262f;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    body.dark-mode .logo {
+      color: #60a5fa;
+      text-shadow: 0 2px 8px rgba(96,165,250,0.08);
+    }
+    body.dark-mode .logo .portal {
+      color: #bfc9db;
+    }
+    body.dark-mode .connection-status {
+      background: #23262f;
+      border-color: #23262f;
+      color: #e5e7eb;
+    }
+    body.dark-mode .status-connected {
+      background: #1e293b;
+      color: #22d3ee;
+      border-color: #334155;
+    }
+    body.dark-mode .status-disconnected {
+      background: #3b1d1d;
+      color: #f87171;
+      border-color: #7f1d1d;
+    }
+    body.dark-mode .bento-card,
+    body.dark-mode .controls-card {
+      background: #23262f;
+      border-color: #23262f;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }
+    body.dark-mode .bento-title {
+      color: #60a5fa;
+    }
+    body.dark-mode .info-label {
+      color: #bfc9db;
+    }
+    body.dark-mode .info-value {
+      color: #e5e7eb;
+    }
+    body.dark-mode .relay-row-card {
+      background: #23262f;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    }
+    body.dark-mode .relay-table th,
+    body.dark-mode .relay-table td {
+      background: #23262f;
+      color: #e5e7eb;
+      border-bottom: 1px solid #334155;
+    }
+    body.dark-mode .relay-table th {
+      background: #181a20;
+      color: #60a5fa;
+      border-bottom: 2px solid #334155;
+    }
+    body.dark-mode .signal-dot {
+      background: #334155;
+    }
+    body.dark-mode .signal-dot.active {
+      background: #22d3ee;
+    }
+    body.dark-mode .toggle-switch {
+      background: #334155;
+    }
+    body.dark-mode .toggle-switch.active {
+      background: #60a5fa;
+    }
+    body.dark-mode .relay-status-on {
+      color: #22d3ee;
+    }
+    body.dark-mode .relay-status-off {
+      color: #f87171;
+    }
+    body.dark-mode .control-btn {
+      background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(96,165,250,0.10);
+    }
+    body.dark-mode .control-btn:active,
+    body.dark-mode .control-btn:hover {
+      background: linear-gradient(90deg, #1d4ed8 60%, #2563eb 100%);
+      box-shadow: 0 4px 16px rgba(96,165,250,0.13);
+    }
+    body.dark-mode .btn-danger {
+      background: linear-gradient(90deg, #b91c1c 60%, #ef4444 100%);
+      color: #fff;
+    }
+    body.dark-mode .btn-danger:active,
+    body.dark-mode .btn-danger:hover {
+      background: linear-gradient(90deg, #991b1b 60%, #b91c1c 100%);
+      box-shadow: 0 4px 16px rgba(239,68,68,0.13);
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-content">
+      <div class="logo">
+        <i class="fas fa-bolt"></i>
+        Home Controller <span class="portal">Web Portal</span>
+      </div>
+      <button id="themeToggleBtn" title="Toggle light/dark mode" style="background:none;border:none;cursor:pointer;font-size:1.4em;margin-right:1em;">
+        <i id="themeToggleIcon" class="fas fa-moon"></i>
+      </button>
+      <div id="connectionStatus" class="connection-status status-disconnected">
+        <span>Connecting...</span>
+      </div>
+    </div>
+  </nav>
+  <div class="container">
+    <div class="bento-grid">
+      <!-- Device Info Card -->
+      <div class="bento-card">
+        <div class="bento-title"><i class="fas fa-microchip"></i> Device Info</div>
+        <div class="bento-content">
+          <div class="info-row"><span class="info-label">Chip ID</span><span class="info-value" id="chipId">-</span></div>
+          <div class="info-row"><span class="info-label">Free RAM</span><span class="info-value" id="freeHeap">-</span></div>
+          <div class="info-row"><span class="info-label">Uptime</span><span class="info-value" id="uptime">-</span></div>
+          <div class="info-row"><span class="info-label">Reset Reason</span><span class="info-value" id="resetReason">-</span></div>
+        </div>
+      </div>
+      <!-- Network Card -->
+      <div class="bento-card">
+        <div class="bento-title"><i class="fas fa-wifi"></i> Network</div>
+        <div class="bento-content">
+          <div class="info-row"><span class="info-label">SSID</span><span class="info-value" id="ssid">-</span></div>
+          <div class="info-row"><span class="info-label">IP Address</span><span class="info-value" id="ipAddress">-</span></div>
+          <div class="info-row"><span class="info-label">MAC Address</span><span class="info-value" id="macAddress">-</span></div>
+          <div class="info-row">
+            <span class="info-label">Signal</span>
+            <span class="info-value">
+              <span class="signal-strength" id="signalStrength">
+                <span class="signal-dot" id="sig1"></span>
+                <span class="signal-dot" id="sig2"></span>
+                <span class="signal-dot" id="sig3"></span>
+                <span class="signal-dot" id="sig4"></span>
+                <span id="rssi" style="margin-left:0.5em;">-</span>
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <!-- System Card -->
+      <div class="bento-card">
+        <div class="bento-title"><i class="fas fa-server"></i> System</div>
+        <div class="bento-content">
+          <div class="info-row"><span class="info-label">WS Clients</span><span class="info-value" id="wsClients">-</span></div>
+          <div class="info-row"><span class="info-label">Active Relays</span><span class="info-value" id="activeRelays">-</span></div>
+          <div class="info-row"><span class="info-label">Total Switches</span><span class="info-value" id="totalSwitches">-</span></div>
+          <div class="info-row"><span class="info-label">Last Update</span><span class="info-value" id="lastUpdate">-</span></div>
+        </div>
+      </div>
+    </div>
+    <!-- Relay Controls and Controls Card in the same row -->
+    <div class="relay-controls-row">
+      <div class="bento-card">
+        <div class="bento-title"><i class="fas fa-toggle-on"></i> Relay Controls</div>
+        <div class="bento-content">
+          <div class="relay-controls-grid" id="relayControlsGrid">
+            <!-- Relay controls will be populated here -->
+          </div>
+        </div>
+      </div>
+      <div class="controls-card">
+        <div class="bento-title"><i class="fas fa-cogs"></i> Actions</div>
+        <div class="controls-section">
+          <button class="control-btn" onclick="refreshStatus()">
+            Refresh Status
+          </button>
+          <button class="control-btn btn-danger" onclick="resetDevice()">
+            Reset Device
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+let websocket = null;
+let connected = false;
+let deviceData = {};
+let switchCount = 0;
+
+function updateConnectionStatus(isConnected) {
+  const statusEl = document.getElementById('connectionStatus');
+  connected = isConnected;
+  if (isConnected) {
+    statusEl.className = 'connection-status status-connected';
+    statusEl.innerHTML = '<span>Connected</span>';
+  } else {
+    statusEl.className = 'connection-status status-disconnected';
+    statusEl.innerHTML = '<span>Disconnected</span>';
+  }
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function formatUptime(milliseconds) {
+  const seconds = Math.floor(milliseconds / 1000);
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+function updateSignalStrength(rssi) {
+  // rssi: 0 (bad) to -100 (worst)
+  let level = 0;
+  if (rssi >= -50) level = 4;
+  else if (rssi >= -60) level = 3;
+  else if (rssi >= -70) level = 2;
+  else if (rssi >= -80) level = 1;
+  else level = 0;
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('sig'+i).className = 'signal-dot' + (i <= level ? ' active' : '');
+  }
+}
+
+function updateDeviceInfo(data) {
+  if (data.device) {
+    document.getElementById('chipId').textContent = data.device.chipId || '-';
+    document.getElementById('freeHeap').textContent = formatBytes(data.device.freeHeap || 0);
+    document.getElementById('uptime').textContent = formatUptime(data.device.uptime || 0);
+    document.getElementById('resetReason').textContent = data.device.resetReason || '-';
+  }
+  if (data.wifi) {
+    document.getElementById('ssid').textContent = data.wifi.ssid || '-';
+    document.getElementById('ipAddress').textContent = data.wifi.ip || '-';
+    document.getElementById('macAddress').textContent = data.wifi.mac || '-';
+    const rssi = data.wifi.rssi || -100;
+    document.getElementById('rssi').textContent = `${rssi} dBm`;
+    updateSignalStrength(rssi);
+  }
+  if (data.websocket) {
+    document.getElementById('wsClients').textContent = data.websocket.clients || '0';
+  }
+  if (data.relays) {
+    const activeRelays = Object.values(data.relays).filter(state => state).length;
+    document.getElementById('activeRelays').textContent = activeRelays;
+    document.getElementById('totalSwitches').textContent = switchCount;
+  }
+  document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+}
+
+function createRelayControlCard(index, state) {
+  return `
+    <div class="relay-row-card">
+      <span class="relay-row-label">Relay ${index + 1}</span>
+      <span class="${state ? 'relay-status-on' : 'relay-status-off'}">${state ? 'ON' : 'OFF'}</span>
+      <span class="toggle-switch${state ? ' active' : ''}" onclick="toggleRelay(${index})" title="Toggle Relay"></span>
+    </div>
+  `;
+}
+
+function updateRelayControls(relayData) {
+  const container = document.getElementById('relayControlsGrid');
+  let html = '';
+  for (let i = 0; i < 4; i++) {
+    const state = relayData && relayData[`relay${i}`] ? relayData[`relay${i}`] : false;
+    html += createRelayControlCard(i, state);
+  }
+  container.innerHTML = html;
+}
+
+function toggleRelay(index) {
+  const currentState = deviceData.relays && deviceData.relays[`relay${index}`];
+  const newState = !currentState;
+  // Optimistic UI update
+  if (!deviceData.relays) deviceData.relays = {};
+  deviceData.relays[`relay${index}`] = newState;
+  updateRelayControls(deviceData.relays);
+  switchCount++;
+  fetch("/api/relay", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `relay=${index}&state=${newState}`
+  })
+  .then(response => {
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return response.text();
+  })
+  .then(() => {
+    // Success
+  })
+  .catch(err => {
+    deviceData.relays[`relay${index}`] = currentState;
+    updateRelayControls(deviceData.relays);
+    alert("Failed to toggle relay. Please try again.");
+  });
+}
+
+function refreshStatus() {
+  fetch("/api/status")
+    .then(res => res.json())
+    .then(data => {
+      deviceData = data;
+      updateDeviceInfo(data);
+      updateRelayControls(data.relays);
+      if (!connected) updateConnectionStatus(true);
+    })
+    .catch(err => {
+      updateConnectionStatus(false);
+    });
+}
+
+function resetDevice() {
+  if (confirm("Are you sure you want to reset the device? This will restart the ESP8266 and clear WiFi settings.")) {
+    fetch("/reset")
+      .then(() => {
+        alert("Device is resetting. You may need to reconnect to the WiFi network.");
+        setTimeout(() => location.reload(), 3000);
+      })
+      .catch(err => {});
+  }
+}
+
+function setupWebSocket() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${protocol}//${location.host}/ws`;
+  websocket = new WebSocket(wsUrl);
+  websocket.onopen = function() {
+    updateConnectionStatus(true);
+  };
+  websocket.onmessage = function(event) {
+    try {
+      const data = JSON.parse(event.data);
+      if (!deviceData.relays) deviceData.relays = {};
+      Object.assign(deviceData.relays, data);
+      updateRelayControls(deviceData.relays);
+      updateDeviceInfo(deviceData);
+    } catch (err) {}
+  };
+  websocket.onclose = function() {
+    updateConnectionStatus(false);
+    setTimeout(setupWebSocket, 3000);
+  };
+  websocket.onerror = function(error) {
+    updateConnectionStatus(false);
+  };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  updateConnectionStatus(false);
+  refreshStatus();
+  setupWebSocket();
+  setInterval(refreshStatus, 30000);
+  // Theme setup
+  const savedTheme = localStorage.getItem('theme');
+  setTheme(savedTheme === 'dark');
+  document.getElementById('themeToggleBtn').onclick = toggleTheme;
+});
+
+// Theme toggle logic
+function setTheme(dark) {
+  if (dark) {
+    document.body.classList.add('dark-mode');
+    document.getElementById('themeToggleIcon').className = 'fas fa-sun';
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.body.classList.remove('dark-mode');
+    document.getElementById('themeToggleIcon').className = 'fas fa-moon';
+    localStorage.setItem('theme', 'light');
+  }
+}
+function toggleTheme() {
+  setTheme(!document.body.classList.contains('dark-mode'));
+}
+</script>
+</body>
+</html>
