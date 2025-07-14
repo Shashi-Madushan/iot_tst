@@ -1,0 +1,21 @@
+{
+  "name": "ESP8266 Relay Controller",
+  "short_name": "Relay Control",
+  "description": "Control and monitor ESP8266-based relay controller",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2196F3",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

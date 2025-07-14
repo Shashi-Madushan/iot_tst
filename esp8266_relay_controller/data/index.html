@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
+<head>  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ESP8266 Smart Relay Controller</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2196F3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Relay Control">
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
     /* Reset and base styles */
@@ -208,6 +213,70 @@
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
+      transition: all 0.2s ease-in-out;
+    }
+    .relay-row-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .relay-info {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .relay-description {
+      font-size: 0.85rem;
+      color: #6b7280;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .relay-status {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .relay-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .schedule-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      background: #e5e7eb;
+      font-size: 0.75rem;
+      color: #374151;
+    }
+    .schedule-badge i {
+      font-size: 0.7rem;
+    }
+    body.dark-mode .schedule-badge {
+      background: #374151;
+      color: #e5e7eb;
+    }
+    .schedule-btn {
+      background: none;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .schedule-btn:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    body.dark-mode .schedule-btn:hover {
+      background: #374151;
+      color: #e7e7eb;
     }
     /* Toggle switch styles */
     .toggle-switch {
@@ -396,104 +465,190 @@
       box-shadow: 0 6px 24px rgba(37,99,235,0.10);
       transform: translateY(-4px) scale(1.02);
     }
-    /* Dark mode styles */
-    body.dark-mode {
-      background: #181a20;
+    /* Improved Schedule Dialog Styles */
+    dialog {
+      padding: 1.5rem;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      max-width: 500px;
+      width: 95%;
+      background: #fff;
+    }
+
+    .schedule-dialog-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .schedule-dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .schedule-dialog-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #2563eb;
+    }
+
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      gap: 1rem;
+    }
+
+    .schedule-item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .schedule-time {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .schedule-days {
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+
+    .schedule-action {
+      font-weight: 500;
+    }
+
+    .schedule-item-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .days-selector {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+    }
+
+    .day-checkbox {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .day-label {
+      font-size: 0.8rem;
+      color: #64748b;
+      text-align: center;
+    }
+
+    .schedule-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .form-group input[type="time"],
+    .form-group select {
+      padding: 0.5rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .dialog-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .dialog-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+
+    /* Dark mode support */
+    body.dark-mode dialog {
+      background: #23262f;
       color: #e5e7eb;
     }
-    body.dark-mode .navbar {
-      background: #23262f;
-      border-bottom: 1px solid #23262f;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-    }
-    body.dark-mode .logo {
-      color: #60a5fa;
-      text-shadow: 0 2px 8px rgba(96,165,250,0.08);
-    }
-    body.dark-mode .logo .portal {
-      color: #bfc9db;
-    }
-    body.dark-mode .connection-status {
-      background: #23262f;
-      border-color: #23262f;
-      color: #e5e7eb;
-    }
-    body.dark-mode .status-connected {
-      background: #1e293b;
-      color: #22d3ee;
+
+    body.dark-mode .schedule-item {
+      background: #1e1e2d;
       border-color: #334155;
     }
-    body.dark-mode .status-disconnected {
-      background: #3b1d1d;
-      color: #f87171;
-      border-color: #7f1d1d;
-    }
-    body.dark-mode .bento-card,
-    body.dark-mode .controls-card {
-      background: #23262f;
-      border-color: #23262f;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
-    }
-    body.dark-mode .bento-title {
-      color: #60a5fa;
-    }
-    body.dark-mode .info-label {
-      color: #bfc9db;
-    }
-    body.dark-mode .info-value {
+
+    body.dark-mode .schedule-time {
       color: #e5e7eb;
     }
-    body.dark-mode .relay-row-card {
-      background: #23262f;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+
+    body.dark-mode .schedule-days {
+      color: #94a3b8;
     }
-    body.dark-mode .relay-table th,
-    body.dark-mode .relay-table td {
-      background: #23262f;
+
+    body.dark-mode .form-group label {
       color: #e5e7eb;
-      border-bottom: 1px solid #334155;
     }
-    body.dark-mode .relay-table th {
-      background: #181a20;
-      color: #60a5fa;
-      border-bottom: 2px solid #334155;
-    }
-    body.dark-mode .signal-dot {
-      background: #334155;
-    }
-    body.dark-mode .signal-dot.active {
-      background: #22d3ee;
-    }
-    body.dark-mode .toggle-switch {
-      background: #334155;
-    }
-    body.dark-mode .toggle-switch.active {
-      background: #60a5fa;
-    }
-    body.dark-mode .relay-status-on {
-      color: #22d3ee;
-    }
-    body.dark-mode .relay-status-off {
-      color: #f87171;
-    }
-    body.dark-mode .control-btn {
-      background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(96,165,250,0.10);
-    }
-    body.dark-mode .control-btn:active,
-    body.dark-mode .control-btn:hover {
-      background: linear-gradient(90deg, #1d4ed8 60%, #2563eb 100%);
-      box-shadow: 0 4px 16px rgba(96,165,250,0.13);
-    }
-    body.dark-mode .btn-danger {
-      background: linear-gradient(90deg, #b91c1c 60%, #ef4444 100%);
-      color: #fff;
-    }
-    body.dark-mode .btn-danger:active,
-    body.dark-mode .btn-danger:hover {
-      background: linear-gradient(90deg, #991b1b 60%, #b91c1c 100%);
-      box-shadow: 0 4px 16px rgba(239,68,68,0.13);
+
+    body.dark-mode .form-group input[type="time"],
+    body.dark-mode .form-group select {
+      background: #1e1e2d;
+      border-color: #334155;
+      color: #e7e7eb;
     }
   </style>
 </head>
@@ -579,11 +734,54 @@
       </div>
     </div>
   </div>
+  <!-- Add scheduling dialog -->
+  <dialog id="scheduleDialog">
+    <div class="schedule-dialog-content">
+      <div class="schedule-dialog-header">
+        <div class="schedule-dialog-title">Relay Schedule</div>
+        <button class="btn-close" onclick="closeScheduleDialog()" style="background:none;border:none;cursor:pointer;font-size:1.2em;color:#64748b;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="schedulesList" class="schedule-list"></div>
+      <form id="scheduleForm" class="schedule-form">
+        <div class="form-group">
+          <label>Time:</label>
+          <input type="time" id="scheduleTime" required>
+        </div>
+        <div class="form-group">
+          <label>Days:</label>
+          <div class="days-selector">
+            <label class="day-checkbox"><input type="checkbox" value="0">Sun<span class="day-label">S</span></label>
+            <label class="day-checkbox"><input type="checkbox" value="1">Mon<span class="day-label">M</span></label>
+            <label class="day-checkbox"><input type="checkbox" value="2">Tue<span class="day-label">T</span></label>
+            <label class="day-checkbox"><input type="checkbox" value="3">Wed<span class="day-label">W</span></label>
+            <label class="day-checkbox"><input type="checkbox" value="4">Thu<span class="day-label">T</span></label>
+            <label class="day-checkbox"><input type="checkbox" value="5">Fri<span class="day-label">F</span></label>
+            <label class="day-checkbox"><input type="checkbox" value="6">Sat<span class="day-label">S</span></label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Action:</label>
+          <select id="scheduleAction">
+            <option value="true">Turn ON</option>
+            <option value="false">Turn OFF</option>
+          </select>
+        </div>
+        <div class="dialog-buttons">
+          <button type="submit" class="dialog-btn btn-primary">Save Schedule</button>
+          <button type="button" class="dialog-btn btn-secondary" onclick="closeScheduleDialog()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
 <script>
 let websocket = null;
 let connected = false;
 let deviceData = {};
 let switchCount = 0;
+let currentSchedules = [];
+let currentRelayId = null;
 
 function updateConnectionStatus(isConnected) {
   const statusEl = document.getElementById('connectionStatus');
@@ -654,12 +852,29 @@ function updateDeviceInfo(data) {
   document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
 }
 
-function createRelayControlCard(index, state) {
+function createRelayControlCard(index, data) {
+  const state = data.state || false;
+  const name = data.name || `Relay ${index + 1}`;
+  const description = data.description || '';
+  const scheduled = data.scheduled || false;
+  const scheduleCount = data.numSchedules || 0;
+  
   return `
     <div class="relay-row-card">
-      <span class="relay-row-label">Relay ${index + 1}</span>
-      <span class="${state ? 'relay-status-on' : 'relay-status-off'}">${state ? 'ON' : 'OFF'}</span>
-      <span class="toggle-switch${state ? ' active' : ''}" onclick="toggleRelay(${index})" title="Toggle Relay"></span>
+      <div class="relay-info">
+        <span class="relay-row-label">${name}</span>
+        ${description ? `<span class="relay-description">${description}</span>` : ''}
+      </div>
+      <div class="relay-status">
+        <span class="${state ? 'relay-status-on' : 'relay-status-off'}">${state ? 'ON' : 'OFF'}</span>
+        ${scheduled ? `<span class="schedule-badge" title="${scheduleCount} schedule(s) active"><i class="fas fa-clock"></i>${scheduleCount}</span>` : ''}
+      </div>
+      <div class="relay-actions">
+        <button class="schedule-btn" onclick="showScheduleDialog(${index})">
+          <i class="fas fa-calendar-alt"></i>
+        </button>
+        <span class="toggle-switch${state ? ' active' : ''}" onclick="toggleRelay(${index})" title="Toggle Relay"></span>
+      </div>
     </div>
   `;
 }
@@ -667,38 +882,70 @@ function createRelayControlCard(index, state) {
 function updateRelayControls(relayData) {
   const container = document.getElementById('relayControlsGrid');
   let html = '';
-  for (let i = 0; i < 4; i++) {
-    const state = relayData && relayData[`relay${i}`] ? relayData[`relay${i}`] : false;
-    html += createRelayControlCard(i, state);
+  
+  // Handle both old and new API formats
+  if (Array.isArray(relayData)) {
+    for (let i = 0; i < relayData.length; i++) {
+      html += createRelayControlCard(i, relayData[i]);
+    }
+  } else if (typeof relayData === 'object') {
+    for (let i = 0; i < 4; i++) {
+      const relay = relayData[i] || { state: false };
+      html += createRelayControlCard(i, relay);
+    }
   }
+  
   container.innerHTML = html;
+  
+  // Update system info
+  const activeCount = Object.values(relayData).filter(r => r.state).length;
+  document.getElementById('activeRelays').textContent = activeCount;
 }
 
 function toggleRelay(index) {
-  const currentState = deviceData.relays && deviceData.relays[`relay${index}`];
+  const relay = deviceData.relays && deviceData.relays[index];
+  const currentState = relay ? relay.state : false;
   const newState = !currentState;
+  
   // Optimistic UI update
   if (!deviceData.relays) deviceData.relays = {};
-  deviceData.relays[`relay${index}`] = newState;
+  if (!deviceData.relays[index]) deviceData.relays[index] = {};
+  deviceData.relays[index].state = newState;
   updateRelayControls(deviceData.relays);
   switchCount++;
-  fetch("/api/relay", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `relay=${index}&state=${newState}`
-  })
-  .then(response => {
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return response.text();
-  })
-  .then(() => {
-    // Success
-  })
-  .catch(err => {
-    deviceData.relays[`relay${index}`] = currentState;
-    updateRelayControls(deviceData.relays);
-    alert("Failed to toggle relay. Please try again.");
-  });
+  
+  // Send command via WebSocket for faster response
+  if (websocket && websocket.readyState === WebSocket.OPEN) {
+    websocket.send(JSON.stringify({
+      cmd: 'set',
+      relay: index,
+      state: newState
+    }));
+  } else {
+    // Fallback to HTTP if WebSocket is not available
+    fetch("/api/relay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        relay: index,
+        state: newState
+      })
+    })
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to toggle relay');
+      }
+    })
+    .catch(err => {
+      deviceData.relays[index].state = currentState;
+      updateRelayControls(deviceData.relays);
+      showError("Failed to toggle relay: " + err.message);
+    });
+  }
 }
 
 function refreshStatus() {
@@ -777,6 +1024,173 @@ function setTheme(dark) {
 function toggleTheme() {
   setTheme(!document.body.classList.contains('dark-mode'));
 }
-</script>
+
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('ServiceWorker registration successful');
+        requestNotificationPermission();
+      })
+      .catch(error => {
+        console.log('ServiceWorker registration failed:', error);
+      });
+  });
+}
+
+// Notification Permission Request
+function requestNotificationPermission() {
+  if ('Notification' in window) {
+    Notification.requestPermission()
+      .then(permission => {
+        if (permission === 'granted') {
+          console.log('Notification permission granted');
+        }
+      });
+  }
+}
+
+// Schedule Management
+function showScheduleDialog(relayId) {
+  currentRelayId = relayId;
+  const dialog = document.getElementById('scheduleDialog');
+  const relayName = deviceData.relays[relayId].name || `Relay ${relayId + 1}`;
+  
+  // Update dialog title
+  document.querySelector('.schedule-dialog-title').textContent = `${relayName} Schedules`;
+  
+  fetch(`/api/schedules?relay=${relayId}`)
+    .then(response => response.json())
+    .then(data => {
+      currentSchedules = data.schedules || [];
+      displaySchedules(data);
+      dialog.showModal();
+    })
+    .catch(error => {
+      console.error('Error fetching schedules:', error);
+      dialog.showModal();
+    });
+}
+
+function closeScheduleDialog() {
+  document.getElementById('scheduleDialog').close();
+}
+
+function formatTime(hour, minute) {
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+function formatDays(days) {
+  const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  return days.map((enabled, i) => enabled ? dayNames[i] : '').filter(d => d).join(' ');
+}
+
+function displaySchedules(data) {
+  const container = document.getElementById('schedulesList');
+  const schedules = data.schedules || [];
+  
+  if (schedules.length === 0) {
+    container.innerHTML = '<p class="text-gray-500">No schedules set</p>';
+    return;
+  }
+
+  const html = schedules.map((schedule, index) => `
+    <div class="schedule-item">
+      <div class="schedule-item-info">
+        <div class="schedule-time">${formatTime(schedule.hour, schedule.minute)}</div>
+        <div class="schedule-days">${formatDays(schedule.days)}</div>
+      </div>
+      <div class="schedule-action ${schedule.state ? 'relay-status-on' : 'relay-status-off'}">
+        ${schedule.state ? 'ON' : 'OFF'}
+      </div>
+      <div class="schedule-item-actions">
+        <button class="schedule-btn" onclick="toggleScheduleEnabled(${index})" title="${schedule.enabled ? 'Disable' : 'Enable'} schedule">
+          <i class="fas fa-${schedule.enabled ? 'check-circle' : 'times-circle'}"></i>
+        </button>
+        <button class="schedule-btn" onclick="deleteSchedule(${index})" title="Delete schedule">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  container.innerHTML = html;
+}
+
+function toggleScheduleEnabled(index) {
+  if (!currentSchedules[index]) return;
+  
+  currentSchedules[index].enabled = !currentSchedules[index].enabled;
+  
+  saveSchedules()
+    .then(() => displaySchedules({ schedules: currentSchedules }))
+    .catch(error => console.error('Error toggling schedule:', error));
+}
+
+function deleteSchedule(index) {
+  if (!confirm('Are you sure you want to delete this schedule?')) return;
+  
+  currentSchedules.splice(index, 1);
+  
+  saveSchedules()
+    .then(() => displaySchedules({ schedules: currentSchedules }))
+    .catch(error => {
+      console.error('Error deleting schedule:', error);
+      currentSchedules.splice(index, 0, savedSchedule);
+    });
+}
+
+function saveSchedules() {
+  const scheduleData = {
+    relay: currentRelayId,
+    scheduled: currentSchedules.length > 0,
+    schedules: currentSchedules
+  };
+
+  return fetch('/api/schedules', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(scheduleData)
+  }).then(response => {
+    if (!response.ok) {
+      throw new Error('Failed to save schedules');
+    }
+  });
+}
+
+document.getElementById('scheduleForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  
+  const time = document.getElementById('scheduleTime').value;
+  const [hours, minutes] = time.split(':').map(Number);
+  const days = Array.from(document.querySelectorAll('.days-selector input'))
+    .map(input => input.checked);
+  const state = document.getElementById('scheduleAction').value === 'true';
+
+  const newSchedule = {
+    hour: hours,
+    minute: minutes,
+    days,
+    state,
+    enabled: true
+  };
+
+  const savedSchedule = {...newSchedule};
+  currentSchedules.push(newSchedule);
+
+  saveSchedules()
+    .then(() => {
+      displaySchedules({ schedules: currentSchedules });
+      e.target.reset();
+    })
+    .catch(error => {
+      console.error('Error saving schedule:', error);
+      currentSchedules.pop(); // Remove the schedule if save failed
+    });
+});
+  </script>
 </body>
 </html>

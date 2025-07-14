@@ -1,4 +1,18 @@
 {
   "device_name": "ESP8266_Relay_Controller",
-  "firmware_version": "1.0"
+  "firmware_version": "1.0",
+  "relays": [
+    {"id": 0, "name": "Relay 1", "description": ""},
+    {"id": 1, "name": "Relay 2", "description": ""},
+    {"id": 2, "name": "Relay 3", "description": ""},
+    {"id": 3, "name": "Relay 4", "description": ""}
+  ],
+  "mqtt": {
+    "enabled": false,
+    "server": "",
+    "port": 1883,
+    "username": "",
+    "password": "",
+    "topic_prefix": "esp8266_relay/"
+  }
 }
