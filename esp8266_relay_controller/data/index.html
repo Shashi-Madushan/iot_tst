@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>  <meta charset="UTF-8" />
+<head>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ESP8266 Smart Relay Controller</title>
   <link rel="manifest" href="/manifest.json">
@@ -18,15 +19,50 @@
       background: #f4f6fa;
       color: #222;
       min-height: 100vh;
+      line-height: 1.5;
     }
+
+    /* Improved container responsiveness */
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Enhanced Bento grid layout */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      align-items: stretch;
+    }
+
+    /* Improved card styles */
+    .bento-card, .controls-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      border: 1px solid #e5e7eb;
+      padding: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeInUp 0.5s ease-out forwards;
+      transition: all 0.3s ease;
+    }
+
+    /* Enhanced navbar */
     .navbar {
       background: #fff;
       border-bottom: 1px solid #e5e7eb;
-      padding: 0.75rem 0;
+      padding: 1rem 0;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
     }
     .nav-content {
       max-width: 900px;
@@ -78,31 +114,26 @@
       color: #b91c1c;
       border-color: #fca5a5;
     }
-    .container {
-      max-width: 1100px;
-      margin: 2rem auto;
-      padding: 0 1.5rem;
-    }
     /* Bento grid layout */
     .bento-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
       margin-bottom: 2rem;
       align-items: stretch;
     }
     .bento-card {
       background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
       border: 1px solid #e5e7eb;
-      padding: 1.8rem 1.5rem 1.5rem 1.5rem;
+      padding: 1.8rem;
       display: flex;
       flex-direction: column;
       min-height: 200px;
       opacity: 0;
       transform: translateY(30px);
-      animation: fadeInUp 0.7s forwards;
+      animation: fadeInUp 0.5s ease-out forwards;
       height: 100%;
     }
     .bento-card:nth-child(1) { animation-delay: 0.05s; }
@@ -146,13 +177,14 @@
       margin-bottom: 0.2em;
     }
     .info-label {
-      color: #6b7280;
-      font-size: 0.97em;
+      color: #4b5563;
+      font-size: 0.95rem;
+      font-weight: 500;
     }
     .info-value {
-      font-weight: 500;
-      color: #222;
-      font-size: 1.05em;
+      color: #111827;
+      font-weight: 600;
+      font-size: 1rem;
     }
     .signal-strength {
       display: flex;
@@ -258,8 +290,8 @@
       font-size: 0.7rem;
     }
     body.dark-mode .schedule-badge {
-      background: #374151;
-      color: #e5e7eb;
+      background: #2d3748;
+      color: #e3e8ef;
     }
     .schedule-btn {
       background: none;
@@ -275,40 +307,36 @@
       color: #374151;
     }
     body.dark-mode .schedule-btn:hover {
-      background: #374151;
-      color: #e7e7eb;
+      background: #232a36;
+      color: #fff;
     }
     /* Toggle switch styles */
     .toggle-switch {
-      width: 44px;
-      height: 24px;
+      width: 48px;
+      height: 26px;
       background: #d1d5db;
-      border-radius: 12px;
+      border-radius: 13px;
       position: relative;
-      display: inline-block;
       cursor: pointer;
-      transition: background 0.2s;
-      vertical-align: middle;
-      margin-left: 1em;
+      transition: all 0.3s ease;
     }
     .toggle-switch::before {
       content: "";
       position: absolute;
       left: 3px;
       top: 3px;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       background: #fff;
       border-radius: 50%;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      transition: left 0.2s;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .toggle-switch.active {
       background: #2563eb;
     }
     .toggle-switch.active::before {
-      left: 23px;
-      background: #fff;
+      left: 25px;
     }
     /* Relay ON/OFF status text color */
     .relay-status-on {
@@ -329,26 +357,20 @@
       padding: 0.5rem 0;
     }
     .control-btn {
-      padding: 0.65rem 1.3rem;
+      padding: 0.75rem 1.5rem;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 1.08rem;
+      font-size: 1rem;
       font-weight: 600;
-      background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+      background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
       color: #fff;
-      transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
-      box-shadow: 0 2px 8px rgba(37,99,235,0.10);
-      outline: none;
-      margin-bottom: 0;
-      display: block;
-      width: 100%;
-      letter-spacing: 0.01em;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.15);
     }
-    .control-btn:active, .control-btn:hover {
-      background: linear-gradient(90deg, #1d4ed8 60%, #2563eb 100%);
-      box-shadow: 0 4px 16px rgba(37,99,235,0.13);
-      transform: translateY(-2px) scale(1.01);
+    .control-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37,99,235,0.2);
     }
     .btn-danger {
       background: linear-gradient(90deg, #b91c1c 60%, #ef4444 100%);
@@ -364,7 +386,7 @@
     @media (max-width: 900px) {
       /* Responsive Layout Improvements */
       .container { 
-        padding: 0.8rem;
+        padding: 1rem;
         margin: 1rem auto;
         max-width: 100%;
       }
@@ -394,12 +416,6 @@
       .control-btn {
         padding: 0.9rem 0.8rem;
       }
-    }
-    /* Remove these overrides since we're handling them above */
-    @media (max-width: 700px) {
-      .bento-grid { grid-template-columns: 1fr; }
-      .relay-controls-row { grid-template-columns: 1fr; gap: 1.2rem; }
-      .relay-controls-grid { grid-template-columns: 1fr; gap: 1rem; }
     }
     @media (max-width: 600px) {
       .container {
@@ -443,16 +459,16 @@
     }
     .controls-card {
       background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
       border: 1px solid #e5e7eb;
-      padding: 1.8rem 1.5rem 1.5rem 1.5rem;
+      padding: 1.8rem;
       display: flex;
       flex-direction: column;
       min-height: 200px;
       opacity: 0;
       transform: translateY(30px);
-      animation: fadeInUp 0.7s forwards;
+      animation: fadeInUp 0.5s ease-out forwards;
       animation-delay: 0.45s;
       justify-content: center;
       align-items: center;
@@ -467,13 +483,19 @@
     }
     /* Improved Schedule Dialog Styles */
     dialog {
-      padding: 1.5rem;
+      padding: 2rem;
       border: none;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
       max-width: 500px;
       width: 95%;
       background: #fff;
+    }
+
+    body.dark-mode dialog {
+      background: #232a36;
+      color: #f3f6fa;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
 
     .schedule-dialog-content {
@@ -581,12 +603,25 @@
       color: #374151;
     }
 
-    .form-group input[type="time"],
-    .form-group select {
-      padding: 0.5rem;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      font-size: 1rem;
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="time"],
+    select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      background: #fff;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
     }
 
     .dialog-buttons {
@@ -622,122 +657,212 @@
     }
 
     /* Dark mode support */
-    body.dark-mode dialog {
-      background: #23262f;
-      color: #e5e7eb;
+    body.dark-mode {
+      background: #181c24;
+      color: #f3f6fa;
     }
 
-    body.dark-mode .schedule-item {
-      background: #1e1e2d;
-      border-color: #334155;
+    body.dark-mode .navbar,
+    body.dark-mode .bento-card,
+    body.dark-mode .controls-card {
+      background: #232a36;
+      border-color: #2d3748;
+      color: #f3f6fa;
     }
 
+    body.dark-mode .bento-title,
+    body.dark-mode .info-label,
+    body.dark-mode .info-value,
+    body.dark-mode .relay-row-label,
+    body.dark-mode .relay-description,
+    body.dark-mode .schedule-dialog-title,
+    body.dark-mode .schedule-days,
     body.dark-mode .schedule-time {
-      color: #e5e7eb;
+      color: #e3e8ef;
     }
-
+    body.dark-mode .relay-description,
+    body.dark-mode .info-label,
     body.dark-mode .schedule-days {
-      color: #94a3b8;
+      color: #b6bedc;
     }
-
-    body.dark-mode .form-group label {
-      color: #e5e7eb;
+    body.dark-mode .relay-status-on {
+      color: #4ade80;
     }
-
-    body.dark-mode .form-group input[type="time"],
-    body.dark-mode .form-group select {
-      background: #1e1e2d;
-      border-color: #334155;
-      color: #e7e7eb;
+    body.dark-mode .relay-status-off {
+      color: #f87171;
     }
-
-    /* MQTT Settings Styles */
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 60px;
-      height: 34px;
-      margin-right: 10px;
+    body.dark-mode .schedule-badge {
+      background: #2d3748;
+      color: #e3e8ef;
     }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
+    body.dark-mode .schedule-btn {
+      color: #b6bedc;
     }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
+    body.dark-mode .schedule-btn:hover {
+      background: #232a36;
+      color: #fff;
     }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 26px;
-      width: 26px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .4s;
+    body.dark-mode .toggle-switch {
+      background: #374151;
     }
-
-    input:checked + .slider {
-      background-color: #2563eb;
+    body.dark-mode .toggle-switch.active {
+      background: #3b82f6;
     }
-
-    input:checked + .slider:before {
-      transform: translateX(26px);
+    body.dark-mode .toggle-switch::before {
+      background: #e3e8ef;
     }
-
-    .slider.round {
-      border-radius: 34px;
+    body.dark-mode .control-btn {
+      background: linear-gradient(90deg, #2563eb 0%, #6366f1 100%);
+      color: #f3f6fa;
     }
-
-    .slider.round:before {
-      border-radius: 50%;
+    body.dark-mode .control-btn.btn-danger {
+      background: linear-gradient(90deg, #dc2626 60%, #f87171 100%);
     }
-
-    #mqttSettings .form-group {
-      margin-bottom: 15px;
+    body.dark-mode .control-btn:active, body.dark-mode .control-btn:hover {
+      background: linear-gradient(90deg, #1e293b 60%, #2563eb 100%);
     }
-
-    #mqttSettings input[type="text"],
-    #mqttSettings input[type="password"],
-    #mqttSettings input[type="number"] {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      font-size: 0.95rem;
+    body.dark-mode input,
+    body.dark-mode select {
+      background: #232a36;
+      border-color: #374151;
+      color: #f3f6fa;
     }
-
-    #mqttSettings label {
-      display: block;
-      margin-bottom: 5px;
-      color: #374151;
-      font-size: 0.9rem;
-      font-weight: 500;
+    body.dark-mode input:focus,
+    body.dark-mode select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
     }
-
-    /* Dark mode support */
+    body.dark-mode #mqttSettings {
+      background: #232a36;
+      border-color: #2d3748;
+    }
+    body.dark-mode #mqttSettings label {
+      color: #e3e8ef;
+    }
     body.dark-mode #mqttSettings input[type="text"],
     body.dark-mode #mqttSettings input[type="password"],
     body.dark-mode #mqttSettings input[type="number"] {
-      background: #1e1e2d;
-      border-color: #334155;
-      color: #e5e7eb;
+      background: #181c24;
+      border-color: #374151;
+      color: #f3f6fa;
     }
-
-    body.dark-mode #mqttSettings label {
-      color: #e5e7eb;
+    body.dark-mode #mqttSettings input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
     }
+    body.dark-mode .dialog-btn.btn-primary {
+      background: #2563eb;
+      color: #f3f6fa;
+    }
+    body.dark-mode .dialog-btn.btn-secondary {
+      background: #374151;
+      color: #e3e8ef;
+    }
+    body.dark-mode .dialog-btn.btn-danger {
+      background: #dc2626;
+      color: #fff;
+    }
+    body.dark-mode dialog {
+      background: #232a36;
+      color: #f3f6fa;
+    }
+    body.dark-mode .schedule-item {
+      background: #181c24;
+      border-color: #2d3748;
+    }
+    body.dark-mode .signal-dot {
+      background: #374151;
+    }
+    body.dark-mode .signal-dot.active {
+      background: #4ade80;
+    }
+    body.dark-mode .info-row {
+      color: #e3e8ef;
+    }
+    body.dark-mode .relay-row-card {
+      background: #232a36;
+      color: #e3e8ef;
+    }
+    body.dark-mode .relay-row-card:hover {
+      background: #181c24;
+    }
+    body.dark-mode .mqtt-toggle-label {
+      color: #e3e8ef;
+    }
+    /* --- MQTT Card Style Fixes --- */
+.mqtt-settings-wrapper {
+  padding: 1rem 0;
+}
+.mqtt-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.mqtt-toggle-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+}
+#mqttSettings {
+  display: none;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-top: 0.5rem;
+}
+#mqttSettings .form-group {
+  margin-bottom: 1rem;
+}
+#mqttSettings input[type="text"],
+#mqttSettings input[type="password"],
+#mqttSettings input[type="number"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+#mqttSettings input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+}
+#mqttSettings label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+body.dark-mode .mqtt-settings-wrapper {
+  padding: 1rem 0;
+}
+body.dark-mode .mqtt-toggle-label {
+  color: #e3e8ef;
+}
+body.dark-mode #mqttSettings {
+  background: #232a36;
+  border-color: #2d3748;
+}
+body.dark-mode #mqttSettings label {
+  color: #e3e8ef;
+}
+body.dark-mode #mqttSettings input[type="text"],
+body.dark-mode #mqttSettings input[type="password"],
+body.dark-mode #mqttSettings input[type="number"] {
+  background: #181c24;
+  border-color: #374151;
+  color: #f3f6fa;
+}
+body.dark-mode #mqttSettings input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+}
+    /* --- End MQTT Card Style Fixes --- */
   </style>
 </head>
 <body>
@@ -824,15 +949,14 @@
     <!-- MQTT Settings Card -->
     <div class="bento-card">
       <div class="bento-title"><i class="fas fa-broadcast-tower"></i> MQTT Settings</div>
-      <div class="bento-content">
-        <div class="form-group">
-          <label class="switch">
-            <input type="checkbox" id="mqttEnabled" onchange="updateMQTTSettings()">
-            <span class="slider round"></span>
-          </label>
-          <span>Enable MQTT</span>
+      <div class="bento-content mqtt-settings-wrapper">
+        <div class="mqtt-toggle-container">
+          <button id="mqttToggleBtn" class="toggle-switch" type="button" title="Enable/Disable MQTT" onclick="toggleMQTT()">
+            <span id="mqttToggleCircle"></span>
+          </button>
+          <span class="mqtt-toggle-label">Enable MQTT</span>
         </div>
-        <div id="mqttSettings" style="display: none;">
+        <div id="mqttSettings">
           <div class="form-group">
             <label>Server:</label>
             <input type="text" id="mqttServer" placeholder="broker.example.com">
@@ -1097,54 +1221,109 @@ function resetDevice() {
   }
 }
 
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  setTheme(savedTheme === 'dark');
+  document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+}
+
+function setTheme(dark) {
+  document.body.classList.toggle('dark-mode', dark);
+  document.getElementById('themeToggleIcon').className = dark ? 'fas fa-sun' : 'fas fa-moon';
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.contains('dark-mode');
+  setTheme(!isDark);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const savedTheme = localStorage.getItem('theme') === 'dark';
+  setTheme(savedTheme);
+  document.getElementById('themeToggleBtn').onclick = toggleTheme;
+  updateConnectionStatus(false);
+  refreshStatus();
+  setupWebSocket();
+  setInterval(refreshStatus, 30000);
+});
+
+// Optimize WebSocket connection with exponential backoff
+let wsRetryCount = 0;
+const MAX_RETRY_DELAY = 30000;
+
 function setupWebSocket() {
+  if (websocket && websocket.readyState <= 1) return;
+
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsUrl = `${protocol}//${location.host}/ws`;
   websocket = new WebSocket(wsUrl);
+
   websocket.onopen = function() {
     updateConnectionStatus(true);
+    wsRetryCount = 0;
   };
+
   websocket.onmessage = function(event) {
     try {
       const data = JSON.parse(event.data);
-      if (!deviceData.relays) deviceData.relays = {};
-      Object.assign(deviceData.relays, data);
-      updateRelayControls(deviceData.relays);
-      updateDeviceInfo(deviceData);
-    } catch (err) {}
+      if (data.relays) {
+        if (!deviceData.relays) deviceData.relays = {};
+        Object.assign(deviceData.relays, data.relays);
+        updateRelayControls(deviceData.relays);
+      }
+      if (data.device || data.wifi || data.websocket) {
+        Object.assign(deviceData, data);
+        updateDeviceInfo(deviceData);
+      }
+    } catch (err) {
+      console.error('WebSocket message error:', err);
+    }
   };
+
   websocket.onclose = function() {
     updateConnectionStatus(false);
-    setTimeout(setupWebSocket, 3000);
+    const delay = Math.min(1000 * Math.pow(2, wsRetryCount), MAX_RETRY_DELAY);
+    wsRetryCount++;
+    setTimeout(setupWebSocket, delay);
   };
-  websocket.onerror = function(error) {
+
+  websocket.onerror = function() {
     updateConnectionStatus(false);
   };
 }
 
 // MQTT Settings Management
-function updateMQTTSettings() {
-  const enabled = document.getElementById('mqttEnabled').checked;
+function updateMQTTToggleUI(enabled) {
+  const btn = document.getElementById('mqttToggleBtn');
+  btn.classList.toggle('active', enabled);
+  btn.setAttribute('aria-pressed', enabled);
   document.getElementById('mqttSettings').style.display = enabled ? 'block' : 'none';
+}
+
+function toggleMQTT() {
+  const enabled = !document.getElementById('mqttToggleBtn').classList.contains('active');
+  updateMQTTToggleUI(enabled);
+  // Optionally, save immediately or wait for Save button
 }
 
 function loadMQTTSettings(data) {
   if (data.mqtt) {
-    document.getElementById('mqttEnabled').checked = data.mqtt.enabled;
+    updateMQTTToggleUI(data.mqtt.enabled);
     document.getElementById('mqttServer').value = data.mqtt.server || '';
     document.getElementById('mqttPort').value = data.mqtt.port || 1883;
     document.getElementById('mqttUsername').value = data.mqtt.username || '';
     document.getElementById('mqttPassword').value = data.mqtt.password || '';
     document.getElementById('mqttTopicPrefix').value = data.mqtt.topic_prefix || 'esp8266_relay/';
-    updateMQTTSettings();
   }
 }
 
 function saveMQTTSettings() {
+  const enabled = document.getElementById('mqttToggleBtn').classList.contains('active');
   const settings = {
     cmd: 'mqtt_config',
     config: {
-      enabled: document.getElementById('mqttEnabled').checked,
+      enabled: enabled,
       server: document.getElementById('mqttServer').value,
       port: parseInt(document.getElementById('mqttPort').value),
       username: document.getElementById('mqttUsername').value,
@@ -1152,7 +1331,6 @@ function saveMQTTSettings() {
       topic_prefix: document.getElementById('mqttTopicPrefix').value
     }
   };
-
   if (websocket && websocket.readyState === WebSocket.OPEN) {
     websocket.send(JSON.stringify(settings));
   }
@@ -1189,21 +1367,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Theme toggle logic
 function setTheme(dark) {
-  if (dark) {
-    document.body.classList.add('dark-mode');
-    document.getElementById('themeToggleIcon').className = 'fas fa-sun';
-    localStorage.setItem('theme', 'dark');
-  } else {
-    document.body.classList.remove('dark-mode');
-    document.getElementById('themeToggleIcon').className = 'fas fa-moon';
-    localStorage.setItem('theme', 'light');
-  }
+  document.body.classList.toggle('dark-mode', dark);
+  document.getElementById('themeToggleIcon').className = dark ? 'fas fa-sun' : 'fas fa-moon';
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
 }
-function toggleTheme() {
-  setTheme(!document.body.classList.contains('dark-mode'));
-}
-
-// Service Worker Registration
+  // Service Worker Registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
